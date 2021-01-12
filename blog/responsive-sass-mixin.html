@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class='loading'>
+  <head>
+    <meta charset='utf-8'>
+    <title>Responsive mixins for Sass — Matthew Macleod</title>
+    <link href="/stylesheets/all.css" rel="stylesheet" />
+    <script src="/javascripts/all.js"></script>
+    <script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-27901410-1', 'matthewmacleod.co.uk');ga('send', 'pageview');</script>
+    <meta content='initial-scale=0.75' name='viewport'>
+  </head>
+  <body class='blog_post'>
+    <div id='structure-header'>
+      <a href='#' id='back_to_top_link'>&#xe809;</a>
+      <div class='centered'>
+        <div class='title'><a href="/">Matthew MacLeod</a></div>
+        <nav class='menu'>
+          <div class='items'>
+            <a href="/#">About</a>
+            <a href="/#panel-blog">Blog</a>
+            <a href="/#panel-portfolio">Portfolio</a>
+            <a href="#panel-contact">Contact me</a>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div id='structure-content'>
+      <div class='centered'>
+        <div class='content-title'>
+          Blog
+        </div>
+        <div class='content'>
+          <time class='blog_date' datetime='2014-01-01'>Wednesday 01 January 2014</time>
+          <h1 id="responsive-mixins-for-sass">Responsive mixins for Sass</h1>
+          
+          <p>I'm a big fan of responsive websites, but it's only relatively recently that we've developed the tools and techniques to make effective responsive templates. It can still be quite a complex affair to build usable and maintainable CSS for these sites, but we can use some of the advanced features of <a href="http://sass-lang.com">Sass</a> to make the job a bit easier.</p>
+          
+          <p>I used to work at <a href="http://www.tictocfamily.com">tictoc</a>, and it was around mid-2012 when we started seeing requests for responsive designs from clients.  At tictoc, we typically built quite complex content-driven sites, and the key to a good responsive UX with these was making sure that content would not only be accessible on a variety of devices, but that content management was kept simple and the presentation remained good.</p>
+          
+          <p>Our frontend developer <a href="https://www.twitter.com/simon_tsang">@simon_tsang</a> looked into various approaches that could work for us, and eventually settled on the "fluid grid" approach to implementing responsive sites with good UX – there are now a few examples of this approach kicking around the Web.</p>
+          
+          <p>I' m sold on this approach as being generally effective for building effective responsive sites, because it offers the benefits of responsiveness while maintaining a usable grid, which makes design a fair bit easier.</p>
+          
+          <h2 id="sass-mixins">Sass mixins</h2>
+          
+          <p>Sass is a great tool for simplifying the generation of CSS, and it makes for a much easier job generating the sometimes complex rules required for responsive grid layouts.</p>
+          
+          <p>There are a couple of key variables I use to establish the constraints of the grid; here's an example taken from this blog:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#037">$col-width</span>:    <span style="color:#60E">76px</span>  <span style="color:#777">// The width of a single grid column</span>&#x000A;<span style="color:#037">$gutter-width</span>: <span style="color:#60E">20px</span>  <span style="color:#777">// The width of the gutter between columns</span>&#x000A;<span style="color:#037">$min-cols</span>:     <span style="color:#60E">3</span>     <span style="color:#777">// The minimum number of columns to show</span>&#x000A;<span style="color:#037">$max-cols</span>:     <span style="color:#60E">14</span>    <span style="color:#777">// The maximum number of columns to show</span>&#x000A;<span style="color:#037">$col-unit</span>:     <span style="color:#60E">2</span>     <span style="color:#777">// The number of column units to snap to</span></pre></div>
+          </div>
+          </div>
+          
+          <p>We can then generate a Sass function that will calculate the required width of an element based on the column and gutter size:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#088;font-weight:bold">@function</span> <span style="color:#369;font-weight:bold">col-width</span>(<span style="color:#037">$n</span>)&#x000A;  <span style="color:#088;font-weight:bold">@return</span> (<span style="color:#037">$col-width</span> * <span style="color:#037">$n</span>) + (<span style="color:#037">$gutter-width</span> * (<span style="color:#037">$n</span> - <span style="color:#60E">1</span>))</pre></div>
+          </div>
+          </div>
+          
+          <p>So, for any grid-aligned element on the page, we use this function to take the desired width in coluns and translate it into a pixel width. Good start. Using this, we can create a Sass mixin which can translate a number of columns into a media query.</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#06B;font-weight:bold">=breakpoint</span>(<span style="color:#037">$cols</span>)&#x000A;  <span style="color:#088;font-weight:bold">@media</span> <span style="color:#606">only</span> <span style="color:#606">screen</span> <span style="color:#606">and</span> ( <span style="color:#606">min-width</span>: <span style="color:#369;font-weight:bold">col-width</span>(<span style="color:#037">$cols</span>) + <span style="color:#037">$gutter-width</span>*<span style="color:#60E">2</span> )&#x000A;    <span style="color:#088;font-weight:bold">@content</span>&#x000A;    &#x000A;<span style="color:#06B;font-weight:bold">=until-breakpoint</span>(<span style="color:#037">$cols</span>)&#x000A;  <span style="color:#088;font-weight:bold">@media</span> <span style="color:#606">only</span> <span style="color:#606">screen</span> <span style="color:#606">and</span> ( <span style="color:#606">max-width</span>: <span style="color:#369;font-weight:bold">col-width</span>(<span style="color:#037">$cols</span>) + <span style="color:#037">$gutter-width</span>*<span style="color:#60E">2</span> - <span style="color:#60E">1px</span> )&#x000A;    <span style="color:#088;font-weight:bold">@content</span></pre></div>
+          </div>
+          </div>
+          
+          <p>So, what's the practical upshot of all this? Basically, we can now use these mixins to create scoped styles that will be applied when the user agent's size is either above or below a specified number of columns.</p>
+          
+          <h2 id="using-the-mixins">Using the mixins</h2>
+          
+          <p>We can immediately start using this code to constrain the width of our content to an integer number of columns. Have a play with this page - you'll notice that when it's resized, the content will snap to fit as many columns as possible into view, keeping the grid units equal in size.</p>
+          
+          <p>We can use the following Sass snippet:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#B06;font-weight:bold">.content</span>&#x000A;  <span style="color:#606">margin</span>: <span style="color:#60E">0</span> <span style="color:#088">auto</span>&#x000A;  <span style="color:#606">width</span>: <span style="color:#60E">100%</span>&#x000A;  <span style="color:#088;font-weight:bold">@for</span> <span style="color:#037">$i</span> <span style="color:#088">from</span> <span style="color:#037">$min-cols</span> <span style="color:#088">through</span> <span style="color:#037">$max-cols</span>/<span style="color:#037">$col-unit</span>&#x000A;    <span style="color:#B44;font-weight:bold">+breakpoint</span>(<span style="color:#037">$i</span>*<span style="color:#037">$col-unit</span>)&#x000A;      <span style="color:#606">width</span>: <span style="color:#369;font-weight:bold">col-width</span>(<span style="color:#037">$i</span>*<span style="color:#037">$col-unit</span>)</pre></div>
+          </div>
+          </div>
+          
+          <p>Which will generate this CSS:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#088;font-weight:bold">@media</span> <span style="color:#339;font-weight:bold">only</span> <span style="color:#F00;background-color:#FAA">s</span><span style="color:#F00;background-color:#FAA">c</span><span style="color:#F00;background-color:#FAA">r</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">n</span> <span style="color:#F00;background-color:#FAA">a</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">d</span> (<span style="color:#F00;background-color:#FAA">m</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">-</span><span style="color:#F00;background-color:#FAA">w</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">d</span><span style="color:#F00;background-color:#FAA">t</span><span style="color:#F00;background-color:#FAA">h</span>: <span style="color:#60E">561px</span>) {&#x000A;  <span style="color:#B06;font-weight:bold">.content</span> {&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">531px</span>;&#x000A;  }&#x000A;}&#x000A;<span style="color:#088;font-weight:bold">@media</span> <span style="color:#339;font-weight:bold">only</span> <span style="color:#F00;background-color:#FAA">s</span><span style="color:#F00;background-color:#FAA">c</span><span style="color:#F00;background-color:#FAA">r</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">n</span> <span style="color:#F00;background-color:#FAA">a</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">d</span> (<span style="color:#F00;background-color:#FAA">m</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">-</span><span style="color:#F00;background-color:#FAA">w</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">d</span><span style="color:#F00;background-color:#FAA">t</span><span style="color:#F00;background-color:#FAA">h</span>: <span style="color:#60E">743px</span>) {&#x000A;  <span style="color:#B06;font-weight:bold">.content</span> {&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">713px</span>;&#x000A;  }&#x000A;}&#x000A;<span style="color:#088;font-weight:bold">@media</span> <span style="color:#339;font-weight:bold">only</span> <span style="color:#F00;background-color:#FAA">s</span><span style="color:#F00;background-color:#FAA">c</span><span style="color:#F00;background-color:#FAA">r</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">n</span> <span style="color:#F00;background-color:#FAA">a</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">d</span> (<span style="color:#F00;background-color:#FAA">m</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">-</span><span style="color:#F00;background-color:#FAA">w</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">d</span><span style="color:#F00;background-color:#FAA">t</span><span style="color:#F00;background-color:#FAA">h</span>: <span style="color:#60E">925px</span>) {&#x000A;  <span style="color:#B06;font-weight:bold">.content</span> {&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">895px</span>;&#x000A;  }&#x000A;}&#x000A;<span style="color:#088;font-weight:bold">@media</span> <span style="color:#339;font-weight:bold">only</span> <span style="color:#F00;background-color:#FAA">s</span><span style="color:#F00;background-color:#FAA">c</span><span style="color:#F00;background-color:#FAA">r</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">n</span> <span style="color:#F00;background-color:#FAA">a</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">d</span> (<span style="color:#F00;background-color:#FAA">m</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">-</span><span style="color:#F00;background-color:#FAA">w</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">d</span><span style="color:#F00;background-color:#FAA">t</span><span style="color:#F00;background-color:#FAA">h</span>: <span style="color:#60E">1107px</span>) {&#x000A;  <span style="color:#B06;font-weight:bold">.content</span> {&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">1077px</span>;&#x000A;  }&#x000A;}&#x000A;<span style="color:#088;font-weight:bold">@media</span> <span style="color:#339;font-weight:bold">only</span> <span style="color:#F00;background-color:#FAA">s</span><span style="color:#F00;background-color:#FAA">c</span><span style="color:#F00;background-color:#FAA">r</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">e</span><span style="color:#F00;background-color:#FAA">n</span> <span style="color:#F00;background-color:#FAA">a</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">d</span> (<span style="color:#F00;background-color:#FAA">m</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">n</span><span style="color:#F00;background-color:#FAA">-</span><span style="color:#F00;background-color:#FAA">w</span><span style="color:#F00;background-color:#FAA">i</span><span style="color:#F00;background-color:#FAA">d</span><span style="color:#F00;background-color:#FAA">t</span><span style="color:#F00;background-color:#FAA">h</span>: <span style="color:#60E">1289px</span>) {&#x000A;  <span style="color:#B06;font-weight:bold">.content</span> {&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">1259px</span>;&#x000A;  }&#x000A;}</pre></div>
+          </div>
+          </div>
+          
+          <p>Awesome. the <code>.content</code> class will now automatically snap to contain as many columns as possible, leaving a gutter to either side.</p>
+          
+          <p>The <code>$col-unit</code> variable in there limits the number of different steps which are generated - while we might have small columns, we may still want to have e.g. an even number of columns, and that's covered by setting that variable.</p>
+          
+          <p>You'll notice that when we drop below the minimum column count, we revert to using a liquid layout. Because mobile devices generally have limited screen size, we want to make as much use of it as possible - so we make sure that we don't waste space by sticking to a grid at that level. That's optional, of course.</p>
+          
+          <p>Now that we've got a fixed, even grid, we can tie other elements together using the same queries. The blog post listing on my <a href="/">homepage</a>, for example, collapses from three columns, to two columns, to one column, as the page reduces in width:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#070;font-weight:bold">li</span>&#x000A;  <span style="color:#606">float</span>: <span style="color:#088">left</span>&#x000A;  <span style="color:#606">padding-left</span>: <span style="color:#037">$gutter-width</span>&#x000A;  <span style="color:#B44;font-weight:bold">+until-breakpoint</span>(<span style="color:#60E">8</span>)&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">100%</span>&#x000A;    <span style="color:#606">padding-left</span>: <span style="color:#60E">0</span>&#x000A;  <span style="color:#B44;font-weight:bold">+breakpoint</span>(<span style="color:#60E">8</span>)&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">50%</span>&#x000A;    <span style="color:#950">&amp;</span><span style="color:#00C;font-weight:bold">:nth-child</span>(<span style="color:#60E">2n</span>+<span style="color:#60E">1</span>)&#x000A;      <span style="color:#606">padding-left</span>: <span style="color:#60E">0</span>&#x000A;      <span style="color:#606">clear</span>: <span style="color:#088">left</span>&#x000A;  <span style="color:#B44;font-weight:bold">+breakpoint</span>(<span style="color:#60E">12</span>)&#x000A;    <span style="color:#606">width</span>: <span style="color:#60E">33.3%</span>&#x000A;    <span style="color:#950">&amp;</span><span style="color:#00C;font-weight:bold">:nth-child</span>(<span style="color:#60E">2n</span>+<span style="color:#60E">1</span>)&#x000A;      <span style="color:#606">padding-left</span>: <span style="color:#037">$gutter-width</span>&#x000A;      <span style="color:#606">clear</span>: <span style="color:#088">none</span>&#x000A;    <span style="color:#950">&amp;</span><span style="color:#00C;font-weight:bold">:nth-child</span>(<span style="color:#60E">3n</span>+<span style="color:#60E">1</span>)&#x000A;      <span style="color:#606">padding-left</span>: <span style="color:#60E">0</span>&#x000A;      <span style="color:#606">clear</span>: <span style="color:#088">left</span></pre></div>
+          </div>
+          </div>
+          
+          <p>It's not too hard to see what's going on here:</p>
+          
+          <ul>
+            <li>By default, the list items are floaded to the left with a little bit of padding</li>
+            <li>When the screen width is ≤ 8 columns, we force them to full width and remove the padding</li>
+            <li>When we've between 8 and 12 columns, we display the list items at half width in two columns</li>
+            <li>When we've more than 12 columns, we display three items per row</li>
+          </ul>
+          
+          <h2 id="further-development">Further development</h2>
+          
+          <p>You might notice that there's an obvious problem in the code above - applying styles with the <code>+breakpoint(n)</code> mixin applies them when the screen is showing <strong>n or more columns</strong>, and using <code>+until-breakpoint(n)</code> when it's showing <strong>n or fewer</strong>. That's not going to be maintainable in the long run, though sometimes it will be desirable.</p>
+          
+          <p>I've got a further development to this approach that allows for the definition of size classes (imagine a mixin <code>+breakpoint-between(8, 12)</code> and you'll probably see what I mean), and generates the required media queries to limit applied styles to apply only in specific size ranges. I'll write that up soon!</p>
+        </div>
+        <div class='content-footer'>
+          <a href="/">← Back</a>
+        </div>
+      </div>
+    </div>
+    <div id='structure-footer'>
+      <div class='centered' id='panel-contact'>
+        <h2>Contact me</h2>
+        <img id="headshot" src="/images/headshot.jpg" />
+        <div class='notes'>
+          <div class='social'>
+            <a class='symbol' href='https://twitter.com/matt_macleod' target='_blank'>&#xe800;</a>
+            <a class='symbol' href='https://facebook.com/matthewmacleod' target='_blank'>&#xe807;</a>
+            <a class='symbol' href='https://uk.linkedin.com/in/matthewmacleod' target='_blank'>&#xe802;</a>
+            <a class='symbol' href='https://github.com/mattmacleod' target='_blank'>&#xe801;</a>
+            <a class='symbol' href='mailto:matt@umm.io' target='_blank'>&#xe803;</a>
+          </div>
+          <dl>
+            <dt>Email</dt>
+            <dd><a href="mailto:matt@umm.io">matt@umm.io</a></dd>
+            <dt>Phone</dt>
+            <dd>+44 7976 121 482</dd>
+          </dl>
+          <div class='additional_links'>
+            <a href="/cv/matthew-macleod-cv-2015.pdf">CV/Résumé [pdf]</a>
+            <a href="/credits.html">Credits</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

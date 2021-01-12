@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html class='loading'>
+  <head>
+    <meta charset='utf-8'>
+    <title>HTML5 spirit level — Matthew Macleod</title>
+    <link href="/stylesheets/all.css" rel="stylesheet" />
+    <script src="/javascripts/all.js"></script>
+    <script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-27901410-1', 'matthewmacleod.co.uk');ga('send', 'pageview');</script>
+    <meta content='initial-scale=0.75' name='viewport'>
+  </head>
+  <body class='blog_post'>
+    <div id='structure-header'>
+      <a href='#' id='back_to_top_link'>&#xe809;</a>
+      <div class='centered'>
+        <div class='title'><a href="/">Matthew MacLeod</a></div>
+        <nav class='menu'>
+          <div class='items'>
+            <a href="/#">About</a>
+            <a href="/#panel-blog">Blog</a>
+            <a href="/#panel-portfolio">Portfolio</a>
+            <a href="#panel-contact">Contact me</a>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div id='structure-content'>
+      <div class='centered'>
+        <div class='content-title'>
+          Blog
+        </div>
+        <div class='content'>
+          <time class='blog_date' datetime='2014-01-25'>Saturday 25 January 2014</time>
+          <h1 id="html5-spirit-level">HTML5 Spirit Level</h1>
+          
+          <p>HTML5 has some pretty cool APIs for doing lots of things that previously would only have been achievable with native apps.</p>
+          
+          <p>I've been doing some work with the <code>deviceorientation</code> event that mobile devices fire when they're moved and rotated. This is a pretty simple event that provides <code>alpha</code>, <code>beta</code> and <code>gamma</code> values describing the device's orientation, and can be used to implement quite a variety of different effects.</p>
+          
+          <p>Combining this with the <code>canvas</code> element, I've put together a <a data-no-turbolink="true" href="/codez/spirit-level/">demo HTML5 spirit level app</a> modeled after the one built into iOS's compass app. The UI is pretty straightforward:</p>
+          
+          <p>
+          <img class="half left" src="/images/blog/spirit-level-1.png" />
+          <img class="half" src="/images/blog/spirit-level-2.png" />
+          </p>
+          
+          <p>There's some stupid code for various edge cases, but in general it's becoming increasingly easy to write compelling HTML5 apps that use device hardware features.</p>
+          
+          <p>You can check out the <a target="_blank" href="https://github.com/mattmacleod/html5-spirit-level">code on github</a> or <a data-no-turbolink="true" href="/codez/spirit-level/">have a look at the app</a>.</p>
+        </div>
+        <div class='content-footer'>
+          <a href="/">← Back</a>
+        </div>
+      </div>
+    </div>
+    <div id='structure-footer'>
+      <div class='centered' id='panel-contact'>
+        <h2>Contact me</h2>
+        <img id="headshot" src="/images/headshot.jpg" />
+        <div class='notes'>
+          <div class='social'>
+            <a class='symbol' href='https://twitter.com/matt_macleod' target='_blank'>&#xe800;</a>
+            <a class='symbol' href='https://facebook.com/matthewmacleod' target='_blank'>&#xe807;</a>
+            <a class='symbol' href='https://uk.linkedin.com/in/matthewmacleod' target='_blank'>&#xe802;</a>
+            <a class='symbol' href='https://github.com/mattmacleod' target='_blank'>&#xe801;</a>
+            <a class='symbol' href='mailto:matt@umm.io' target='_blank'>&#xe803;</a>
+          </div>
+          <dl>
+            <dt>Email</dt>
+            <dd><a href="mailto:matt@umm.io">matt@umm.io</a></dd>
+            <dt>Phone</dt>
+            <dd>+44 7976 121 482</dd>
+          </dl>
+          <div class='additional_links'>
+            <a href="/cv/matthew-macleod-cv-2015.pdf">CV/Résumé [pdf]</a>
+            <a href="/credits.html">Credits</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html class='loading'>
+  <head>
+    <meta charset='utf-8'>
+    <title>Passive wifi presence detection using Raspberry Pi — Matthew Macleod</title>
+    <link href="/stylesheets/all.css" rel="stylesheet" />
+    <script src="/javascripts/all.js"></script>
+    <script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-27901410-1', 'matthewmacleod.co.uk');ga('send', 'pageview');</script>
+    <meta content='initial-scale=0.75' name='viewport'>
+  </head>
+  <body class='blog_post'>
+    <div id='structure-header'>
+      <a href='#' id='back_to_top_link'>&#xe809;</a>
+      <div class='centered'>
+        <div class='title'><a href="/">Matthew MacLeod</a></div>
+        <nav class='menu'>
+          <div class='items'>
+            <a href="/#">About</a>
+            <a href="/#panel-blog">Blog</a>
+            <a href="/#panel-portfolio">Portfolio</a>
+            <a href="#panel-contact">Contact me</a>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div id='structure-content'>
+      <div class='centered'>
+        <div class='content-title'>
+          Blog
+        </div>
+        <div class='content'>
+          <time class='blog_date' datetime='2014-01-06'>Monday 06 January 2014</time>
+          <h1 id="passive-wifi-presence-detection-on-raspberry-pi">Passive wifi presence detection on Raspberry Pi</h1>
+          
+          <p>At <a href="https://www.digital-science.com">Digital Science</a>, we try to get the engineering team out of the office for a Hack Break every year, to give us the opportunity to kick around some ideas and play with new technology. Among other projects, this year we built a system that would allow us to keep track of who was in the office each day – we've got a few remote workers and a couple of different spaces in our office building, and figured it would be useful to know who was where.</p>
+          
+          <p>We had a couple of ideas about how this might be implemented - RFID cards or QR codes that would require a quick scan on arrival, or something similar. Then we realised that most of our staff are carrying mobile devices with wifi support—laptops and phones—and decided that we'd try to track the location of these devices.</p>
+          
+          <h2 id="the-setup">The setup</h2>
+          
+          <p>Our tracking platform (which we called Presents, until we come up with a better name) uses several <a href="http://www.raspberrypi.org">Raspberry Pi</a> "data collection" nodes placed throughout the office, teamed up with a data aggregation service with an API for plugging into various other systems and querying data.</p>
+          
+          <p>Here's a brief overview:</p>
+          
+          <p><img src="/images/blog/presents-diagram.png" /></p>
+          
+          <ul>
+            <li>
+              <p>The Raspberry Pi scanners each have two USB wifi dongles: one for scanning wifi frequencies for devices we want to track, and one for connecting to the office network.</p>
+            </li>
+            <li>
+              <p>Software on the scanner nodes capture the MAC address and timestamp of every wifi packet they see, and push events into Redis on the data aggregation server.</p>
+            </li>
+            <li>
+              <p>A Rails worker on the server consumes packets from Redis, filtering for MAC addresses we care about and inserting records into MySQL.</p>
+            </li>
+            <li>
+              <p>The Rails app also provides a JSON API endpoint which allows the location of staff to be queried, and a dashboard-style HTML frontend for display on TV screens in the office.</p>
+            </li>
+          </ul>
+          
+          <h2 id="the-wifi-scanners">The wifi scanners</h2>
+          
+          <h3 id="hardware">Hardware</h3>
+          
+          <p>You're probably familiar with the Raspberry Pi – it's a low-cost, single-board ARM computer designed to be hacker-friendly, and it's perfect for this sort of job. We've combined it with a snazzy case and two Tenda W522U Dual Band wifi dongles – these support both 2.4GHz and 5GHz frequencies. Then it's just a standard USB power supply and an SD card, and we've got everything we need.</p>
+          
+          <h3 id="software">Software</h3>
+          
+          <p>We run a minimal installation of <a href="https://www.raspbian.org">Raspbian</a> from a read-only filesystem on the Raspberry Pi's SD card, and immediately launch Kismet and our custom scanning sofrware. <a href="http://www.kismetwireless.net">Kismet</a> is the gold-standard in open-source wifi tools – it's a layer 2 network sniffer which can passively monitor wireless traffic by using the RFMON mode of most wifi adapters, and it works great on the Raspberry Pi.</p>
+          
+          <p>We use a custom Ruby script to communicate with Kismet using it's straightforward remote monitoring protocol, and to format and push the information into our central Redis server. First, we setup connections to Redis and Kismet:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#080;font-weight:bold">def</span> <span style="color:#06B;font-weight:bold">scan!</span>&#x000A;    <span style="color:#33B">@ki</span> = <span style="color:#036;font-weight:bold">KismetInterface</span>.new(<span style="color:#A60">:host</span> =&gt; <span style="color:#33B">@kismet_host</span>, <span style="color:#A60">:port</span> =&gt; <span style="color:#33B">@kismet_port</span>, <span style="color:#A60">:id</span> =&gt; <span style="color:#33B">@id</span>)&#x000A;    <span style="color:#33B">@ri</span> = <span style="color:#036;font-weight:bold">RedisInterface</span>.new(<span style="color:#A60">:host</span> =&gt; <span style="color:#33B">@redis_host</span>, <span style="color:#A60">:port</span> =&gt; <span style="color:#33B">@redis_port</span>, <span style="color:#A60">:buffer_size</span> =&gt; <span style="color:#33B">@buffer_size</span>, <span style="color:#A60">:password</span> =&gt; <span style="color:#33B">@redis_pass</span>)&#x000A;    puts <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">  Scanner service is waiting for packets</span><span style="color:#710">&quot;</span></span>&#x000A;    <span style="color:#080;font-weight:bold">while</span> packet = <span style="color:#33B">@ki</span>.read_packet&#x000A;      <span style="color:#33B">@ri</span>.queue! packet&#x000A;    <span style="color:#080;font-weight:bold">end</span>&#x000A;  <span style="color:#080;font-weight:bold">end</span></pre></div>
+          </div>
+          </div>
+          
+          <p>We immediately open a socket connection to Kismet, and instruct it to remove the once-per-second timestamp we'd otherwise get. We also tell the server to send us the MAC address and signal strenth of all wifi packets it sees. That's pretty much the core of our scanner complete!</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre><span style="color:#080;font-weight:bold">def</span> <span style="color:#06B;font-weight:bold">setup_kismet!</span>&#x000A;    <span style="color:#33B">@socket</span> = <span style="color:#036;font-weight:bold">TCPSocket</span>.open <span style="color:#33B">@host</span>, <span style="color:#33B">@port</span>&#x000A;    send_cmd <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">REMOVE TIME</span><span style="color:#710">&quot;</span></span> &#x000A;    send_cmd <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">ENABLE CLIENT mac,signal_dbm</span><span style="color:#710">&quot;</span></span>&#x000A;  <span style="color:#080;font-weight:bold">end</span></pre></div>
+          </div>
+          </div>
+          
+          <p>Then all we have to do is read the output from Kismet:</p>
+          
+          <div class="highlighter-coderay"><div class="CodeRay">
+            <div class="code"><pre>&#x000A; <span style="color:#080;font-weight:bold">def</span> <span style="color:#06B;font-weight:bold">read_packet</span>&#x000A;    <span style="color:#080;font-weight:bold">while</span> str = <span style="color:#33B">@socket</span>.gets&#x000A;      processed_string = process(str)&#x000A;      <span style="color:#080;font-weight:bold">return</span> processed_string <span style="color:#080;font-weight:bold">if</span> processed_string&#x000A;    <span style="color:#080;font-weight:bold">end</span>&#x000A;  <span style="color:#080;font-weight:bold">end</span>&#x000A;&#x000A;  <span style="color:#080;font-weight:bold">def</span> <span style="color:#06B;font-weight:bold">process</span> str&#x000A;    <span style="color:#080;font-weight:bold">return</span> <span style="color:#080;font-weight:bold">unless</span> str =~ <span style="background-color:hsla(300,100%,50%,0.06)"><span style="color:#404">/</span><span style="color:#D20">\*</span><span style="color:#808">CLIENT</span><span style="color:#404">/</span></span>&#x000A;    client_mac, signal = str.split(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20"> </span><span style="color:#710">&quot;</span></span>)[<span style="color:#00D">1</span>,<span style="color:#00D">2</span>]&#x000A;    <span style="color:#080;font-weight:bold">return</span> <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="background-color:hsla(0,0%,0%,0.07);color:black"><span style="font-weight:bold;color:#666">#{</span> <span style="color:#33B">@id</span> <span style="font-weight:bold;color:#666">}</span></span><span style="color:#D20">|</span><span style="background-color:hsla(0,0%,0%,0.07);color:black"><span style="font-weight:bold;color:#666">#{</span> <span style="color:#036;font-weight:bold">Time</span>.now.to_i <span style="font-weight:bold;color:#666">}</span></span><span style="color:#D20">|</span><span style="background-color:hsla(0,0%,0%,0.07);color:black"><span style="font-weight:bold;color:#666">#{</span> client_mac <span style="font-weight:bold;color:#666">}</span></span><span style="color:#D20">|</span><span style="background-color:hsla(0,0%,0%,0.07);color:black"><span style="font-weight:bold;color:#666">#{</span> signal <span style="font-weight:bold;color:#666">}</span></span><span style="color:#710">&quot;</span></span>&#x000A;  <span style="color:#080;font-weight:bold">end</span></pre></div>
+          </div>
+          </div>
+          
+          <p>Magic. We've now got a formatted string ready to push into our Redis queue.</p>
+          
+          <p>Obviously there's a bit of work around configuring Kismet and Rasbian to work with multiple wifi dongles, but this is pretty straightforward. Thanks to the read-only root on the Raspberry Pi, if anything goes wrong, we can just toggle the power.</p>
+          
+          <h2 id="the-backend">The backend</h2>
+          
+          <p>We're hosting our Redis queue and frontend web server on an m1.small AWS instance – there's nothing much too it, so it's not that taxing.</p>
+          
+          <p>We're using a simple Rails app with <a href="https://github.com/jmettraux/rufus-scheduler">Rufus Scheduler</a> to pull data from Redis every 10s and insert it into MySQL. This gives us the opportunity to throw out any packets we're not interested in and get the data into a relational structure suitable for some of the more complex queries we want to make later.</p>
+          
+          <h2 id="the-frontend">The frontend</h2>
+          
+          <p>There are two interfaces to our backend app – a simple JSON API for querying the current location of registered users, and an HTML dashboard that we display around the office. The JSON API is primarily for the use of our Hubot installation, so that we can query locations directly from Hipchat.</p>
+          
+          <p>The dasboard interface in particular is pretty cool, and I'll follow up with more details in another post soon!</p>
+        </div>
+        <div class='content-footer'>
+          <a href="/">← Back</a>
+        </div>
+      </div>
+    </div>
+    <div id='structure-footer'>
+      <div class='centered' id='panel-contact'>
+        <h2>Contact me</h2>
+        <img id="headshot" src="/images/headshot.jpg" />
+        <div class='notes'>
+          <div class='social'>
+            <a class='symbol' href='https://twitter.com/matt_macleod' target='_blank'>&#xe800;</a>
+            <a class='symbol' href='https://facebook.com/matthewmacleod' target='_blank'>&#xe807;</a>
+            <a class='symbol' href='https://uk.linkedin.com/in/matthewmacleod' target='_blank'>&#xe802;</a>
+            <a class='symbol' href='https://github.com/mattmacleod' target='_blank'>&#xe801;</a>
+            <a class='symbol' href='mailto:matt@umm.io' target='_blank'>&#xe803;</a>
+          </div>
+          <dl>
+            <dt>Email</dt>
+            <dd><a href="mailto:matt@umm.io">matt@umm.io</a></dd>
+            <dt>Phone</dt>
+            <dd>+44 7976 121 482</dd>
+          </dl>
+          <div class='additional_links'>
+            <a href="/cv/matthew-macleod-cv-2015.pdf">CV/Résumé [pdf]</a>
+            <a href="/credits.html">Credits</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
